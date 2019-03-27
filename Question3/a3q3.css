@@ -1,0 +1,12 @@
+#headerImage{
+    max-width: 50px;
+    min-width: 50px;
+    min-height: 50px;
+    max-width: 50px;
+    border-radius: 10px;
+}
+
+#clock{
+    color: white;
+    margin-left: 75%;
+}
