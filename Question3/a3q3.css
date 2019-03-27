@@ -3,10 +3,28 @@
     min-width: 50px;
     min-height: 50px;
     max-width: 50px;
-    border-radius: 10px;
+    border-radius: 30px;
 }
 
 #clock{
     color: white;
-    margin-left: 75%;
+    margin-left: 78%;
+}
+
+#disclaimerCard{
+    width: 400px;
+    height: 400px;
+    padding: 20px;
+    border-radius: 20px;
+}
+
+#loginCard{
+    width: 1000px;
+    max-height: 600px;
+    margin-top: 3%;
+    padding-top: 5%;
+    padding-left: 20%;
+    padding-right: 20%;
+    border-radius: 20px;
+    background: url(" https://picsum.photos/2000/1000?image=664") no-repeat fixed;
 }
