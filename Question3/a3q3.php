@@ -32,13 +32,33 @@ session_start();
         <v-toolbar app fixed clipped-left dark>
             <img src="https://picsum.photos/510/300?random" id="headerImage">
             <v-toolbar-title class="title font-weight-light">Hotel Room Search</v-toolbar-title>
-            <h1 style="color: white">{{credentialsValidity}}</h1>
-            <h1 class="title font-weight-light" id="clock"> {{time}}</h1>
+            <h1 class="title font-weight-light" style="color: white; margin-left: 30%" v-show="credentialsValidity == 'true'"> Welcome {{sessionUsername}}</h1>
+            <h1 class="title font-weight-light" id="clock1" v-show="credentialsValidity == 'true'"> {{time}}</h1>
+            <h1 class="title font-weight-light" id="clock2" v-show="credentialsValidity == 'false'"> {{time}}</h1>
+            <v-btn v-if="credentialsValidity == 'true'" round @click="credentialsValidity ='false'; logout = true"> <v-icon> fas fa-sign-out-alt</v-icon></v-btn>
         </v-toolbar>
         <v-content>
+            <v-alert
+                    v-model="createdAccountAlert"
+                    dismissible
+                    type="success"
+                    color="green"
+                    transition="scale-transition"
+            >
+                Your account was successfully {{ sessionUsername }}
+            </v-alert>
+            <v-alert
+                    v-model="isValidCredentials"
+                    dismissible
+                    type="error"
+                    color="red"
+                    transition="scale-transition"
+            >
+                Invalid credentials
+            </v-alert>
             <v-container fluid fill-height>
-                <v-layout justify-center align-content-center>
-                <v-card light v-if="loginPage" id="loginCard">
+                <v-layout justify-center align-content-center v-if="credentialsValidity == 'false' || logout">
+                <v-card light id="loginCard">
                     <v-layout justify-center pb-3>
                     <v-card-title style="justify-content: center" pb-3>
                         <v-icon large left>far fa-user  </v-icon>
@@ -52,13 +72,33 @@ session_start();
                             <input type="hidden" name="password" value="x">
                             <input type="hidden" name="typeOfRequest" value="x">
                         <v-layout justify-center>
-                        <v-btn type="submit" outline round dark color="white" @click="typeOfRequest = 'login';login()">Login </v-btn>
+                        <v-btn type="submit" outline round dark color="white" @click="logout = false; typeOfRequest = 'login';login()">Login </v-btn>
                         </v-layout>
                         <v-layout justify-center pt-3>
-                        <v-btn round @click="typeOfRequest = 'create';login()">Create new account</v-btn>
+                        <v-btn round @click="logout = false; typeOfRequest = 'create';login(); createdAccountAlert = true">Create new account</v-btn>
                         </v-layout>
                         </form>
                 </v-card>
+                </v-layout>
+                <v-layout justify-center align-content-center v-if="credentialsValidity == 'true' && !logout">
+                    <v-card light v-if="credentialsValidity == 'true'" id="hotelsCard">
+                        <v-card-title style="justify-content: center" pb-5>
+                            <v-icon large left>fas fa-search</v-icon>
+                            <span class="title font-weight-light">Search for an hotel</span>
+                        </v-card-title>
+                        <form method="POST" action="a3q3.php" id="hotelsForm" name="hotelsForm">
+
+                            <v-combobox style="margin-top: 20px" autofocus label="Choose a category"></v-combobox>
+                            <v-text-field style="margin-top: 20px;" outline label="Keyword..."></v-text-field>
+
+                            <input type="hidden" name="username" value="x">
+                            <input type="hidden" name="password" value="x">
+                            <input type="hidden" name="typeOfRequest" value="x">
+                            <v-layout justify-center pt-3>
+                                <v-btn type="submit" outline round dark color="grey darken-2" @click="">Search </v-btn>
+                            </v-layout>
+                        </form>
+                    </v-card>
                 </v-layout>
             </v-container>
             <v-dialog v-model="disclaimerDialog" max-width="400px" dark>
@@ -84,8 +124,12 @@ session_start();
         el: "#app",
         data() {
             return {
+                request: "<?php $typeOfRequest = htmlspecialchars($_POST['typeOfRequest']);
+                        echo $typeOfRequest;
+                ?>",
                 userNameEntered: '<?php echo $var?> ',
                 username: "",
+                sessionUsername: "<?php echo htmlspecialchars($_POST['username']); ?>",
                 password: "",
                 typeOfRequest: "",
                 credentialsValidity: "<?php
@@ -99,6 +143,8 @@ session_start();
 
                 if($typeOfRequest == 'create'){
                     fwrite($loginCredentialsFile, $username . ":" . $password. ";\n");
+                    $credentialsValidity = "true";
+                    echo $credentialsValidity;
                 }else{
                    while ($line = fgets($loginCredentialsFile)) {
                         $lineUserName = substr($line, 0, strpos($line,":"));
@@ -115,6 +161,7 @@ session_start();
                 disclaimerDialog: false,
                 loginPage: true,
                 showFooter: true,
+                logout: false,
                 usernameRules: {
                     required: value => !!value || 'Required.',
                     counter: value => value.length <= 20 || 'Max 20 characters',
@@ -143,6 +190,18 @@ session_start();
             }
        },
         computed:{
+            createdAccountAlert: function () {
+                return this.request == 'create';
+            },
+            isValidCredentials: function () {
+                if(this.request == 'create'){
+                    return false
+                }else if (this.request == 'login') {
+                    return this.credentialsValidity === 'false' && !this.logout;
+                }else{
+                    return false;
+                }
+            }
         }
     });
 </script>
