@@ -29,13 +29,13 @@ session_start();
 
 <div id="app">
     <v-app dark id="inspire">
-        <v-toolbar app fixed clipped-left dark>
+        <v-toolbar app fixed clipped-left light>
             <img src="https://picsum.photos/510/300?random" id="headerImage">
             <v-toolbar-title class="title font-weight-light">Hotel Room Search</v-toolbar-title>
-            <h1 class="title font-weight-light" style="color: white; margin-left: 30%" v-show="credentialsValidity == 'true'"> Welcome {{sessionUsername}}</h1>
-            <h1 class="title font-weight-light" id="clock1" v-show="credentialsValidity == 'true'"> {{time}}</h1>
-            <h1 class="title font-weight-light" id="clock2" v-show="credentialsValidity == 'false'"> {{time}}</h1>
-            <v-btn v-if="credentialsValidity == 'true'" round @click="credentialsValidity ='false'; logout = true"> <v-icon> fas fa-sign-out-alt</v-icon></v-btn>
+            <h1 class="title font-weight-light" style="color: #424242; margin-left: 30%" v-show="credentialsValidity == 'true'"> Welcome {{sessionUsername}} !</h1>
+            <h1 class="title font-weight-light" style="color: #424242" id="clock1" v-show="credentialsValidity == 'true'"> {{time}}</h1>
+            <h1 class="title font-weight-light" style="color: #424242" id="clock2" v-show="credentialsValidity == 'false'"> {{time}}</h1>
+            <v-btn s style="padding-left: 5px" v-if="credentialsValidity == 'true'" fab flat @click="credentialsValidity ='false'; logout = true"> <v-icon color="#424242"> fas fa-sign-out-alt</v-icon></v-btn>
         </v-toolbar>
         <v-content>
             <v-alert
@@ -88,14 +88,14 @@ session_start();
                         </v-card-title>
                         <form method="POST" action="a3q3.php" id="hotelsForm" name="hotelsForm">
 
-                            <v-combobox style="margin-top: 20px" autofocus label="Choose a category"></v-combobox>
-                            <v-text-field style="margin-top: 20px;" outline label="Keyword..."></v-text-field>
+                            <v-combobox v-model="category" :items="categories" style="margin-top: 20px" autofocus label="Choose a category"></v-combobox>
+                            <v-text-field v-model="keyword" style="margin-top: 20px;" outline label="Keyword..."></v-text-field>
 
-                            <input type="hidden" name="username" value="x">
-                            <input type="hidden" name="password" value="x">
+                            <input type="hidden" name="category" value="x">
+                            <input type="hidden" name="keyword" value="x">
                             <input type="hidden" name="typeOfRequest" value="x">
                             <v-layout justify-center pt-3>
-                                <v-btn type="submit" outline round dark color="grey darken-2" @click="">Search </v-btn>
+                                <v-btn type="submit" outline round dark color="grey darken-2" @click="search()">Search </v-btn>
                             </v-layout>
                         </form>
                     </v-card>
@@ -112,7 +112,7 @@ session_start();
                 </v-card>
             </v-dialog>
         </v-content>
-        <v-footer app fixed light color="grey lighten-1" height="50px" v-if="showFooter">
+        <v-footer app fixed light color="grey lighten-1" height="50px" v-if="showFooter" id="footer">
             <span class=" font-weight-light">&copy; 2019 All images randomly generated from: https://picsum.photos/510/300?random</span>
             <v-btn style="margin-left: 14%" dark round @click="disclaimerDialog=true" light color="grey darken-2">Privacy/Disclaimer</v-btn>
             <v-btn style="margin-left: 42%" fab small @click="showFooter=false"><v-icon color="grey darken-2">fas fa-times</v-icon></v-btn>
@@ -124,6 +124,9 @@ session_start();
         el: "#app",
         data() {
             return {
+                category: '',
+                keyword: '',
+                categories: [ {header: 'Select a search category:'}, {text: 'location'}, {text: 'address'}, {text: 'number of rooms available'}, {text: 'special facilities'}, {text: 'price'}],
                 request: "<?php $typeOfRequest = htmlspecialchars($_POST['typeOfRequest']);
                         echo $typeOfRequest;
                 ?>",
@@ -156,6 +159,10 @@ session_start();
                     echo $credentialsValidity;
                 }
                 ?>",
+
+                hotelsString: '<?php
+                    $string = file_get_contents("availableHotelRooms.txt");
+                    echo json_encode($string)?>',
                 time: '',
                 date: '',
                 disclaimerDialog: false,
@@ -178,7 +185,7 @@ session_start();
                         const pattern = /^(?=.*[0-9])(?=.*[a-zA-Z])([a-zA-Z0-9]+)$/;
                         return pattern.test(value) || 'Must contain at least one digit and one character and no special character'
                     }
-                }
+                },
             }
         },
        methods:{
@@ -187,7 +194,12 @@ session_start();
                 document.loginForm.password.value = this.password;
                 document.loginForm.typeOfRequest.value = this.typeOfRequest;
                 document.forms["loginForm"].submit();
-            }
+            },
+           search: function(){
+               document.hotelsForm.keyword.value = this.keyword;
+               document.hotelsForm.category.value = this.category;
+               document.forms["hotelsForm"].submit();
+           }
        },
         computed:{
             createdAccountAlert: function () {

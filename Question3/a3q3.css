@@ -8,7 +8,7 @@
 
 #clock1{
     color: white;
-    margin-left: 34%;
+    margin-left: 37%;
 }
 
 #clock2{
@@ -44,4 +44,9 @@
     padding-right: 20%;
     border-radius: 20px;
     background: url(" https://picsum.photos/2000/1000?image=1067") no-repeat fixed;
+}
+
+#footer{
+    border-radius: 20px;
+    padding: 8px;
 }
