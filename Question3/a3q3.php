@@ -98,18 +98,16 @@ session_start();
                 $credentialsValidity = "false";
 
                 if($typeOfRequest == 'create'){
-                    fwrite($loginCredentialsFile, $username . ":" . $password. "\n");
+                    fwrite($loginCredentialsFile, $username . ":" . $password. ";\n");
                 }else{
-                   // while ($line = fgets($loginCredentialsFile)) {
-                    $line = fgets($loginCredentialsFile);
-                        $lineUserName = substr($line, 0, 5);
-                        $linePassword = substr($line, $line.strrpos(":"), strlen($line));
-                        if($username == $lineUserName && $password == $linePassword){
+                   while ($line = fgets($loginCredentialsFile)) {
+                        $lineUserName = substr($line, 0, strpos($line,":"));
+                        $linePassword = substr($line, strpos($line,":")+1, strpos($line,";")-strpos($line,":")-1);
+                        if($username == $lineUserName && (strpos($password, $linePassword) != false || $password == $linePassword)){
                             $credentialsValidity = "true";
-                     //   }
+                        }
                     }
-                    echo $lineUserName;
-
+                    echo $credentialsValidity;
                 }
                 ?>",
                 time: '',
