@@ -22,16 +22,17 @@
 </head>
 <body>
 
+<?php
 session_start();
+?>
+
 
 <div id="app">
     <v-app dark id="inspire">
         <v-toolbar app fixed clipped-left dark>
             <img src="https://picsum.photos/510/300?random" id="headerImage">
             <v-toolbar-title class="title font-weight-light">Hotel Room Search</v-toolbar-title>
-            <?php if(isset($_POST['username'])) {
-                echo "<h1 class=\"title font-weight-light\">Hello " . htmlspecialchars($_POST['username']) . "!!</h1>";
-            } ?>
+            <h1 style="color: white">{{credentialsValidity}}</h1>
             <h1 class="title font-weight-light" id="clock"> {{time}}</h1>
         </v-toolbar>
         <v-content>
@@ -47,14 +48,14 @@ session_start();
                         <form method="POST" action="a3q3.php" id="loginForm" name="loginForm">
                         <v-text-field v-model="username" outline dark autofocus color="white" label="username" :rules="[usernameRules.required, usernameRules.counter, usernameRules.content]" pt-3></v-text-field>
                         <v-text-field v-model="password" outline dark color="white" label="password" type="password" :rules="[passwordRules.required, passwordRules.counterMax, passwordRules.counterMin, passwordRules.characterDigit]" pt-3></v-text-field>
-                            <input type="hidden" name="username" value="">
-                            <input type="hidden" name="password" value="">
-                            <input type="hidden" name="typeOfRequest" value="">
+                            <input type="hidden" name="username" value="x">
+                            <input type="hidden" name="password" value="x">
+                            <input type="hidden" name="typeOfRequest" value="x">
                         <v-layout justify-center>
-                        <v-btn type="submit" round @click="typeOfRequest = 'login';login">Login </v-btn>
+                        <v-btn type="submit" outline round dark color="white" @click="typeOfRequest = 'login';login()">Login </v-btn>
                         </v-layout>
                         <v-layout justify-center pt-3>
-                        <v-btn outline round dark color="white" @click="typeOfRequest = 'create';login">Create new account</v-btn>
+                        <v-btn round @click="typeOfRequest = 'create';login()">Create new account</v-btn>
                         </v-layout>
                         </form>
                 </v-card>
@@ -83,10 +84,34 @@ session_start();
         el: "#app",
         data() {
             return {
-                userNameEntered: "<?php $username ?> ",
+                userNameEntered: '<?php echo $var?> ',
                 username: "",
                 password: "",
                 typeOfRequest: "",
+                credentialsValidity: "<?php
+                $var = "X";
+                $username = htmlspecialchars($_POST['username']);
+                $password = htmlspecialchars($_POST['password']);
+                $typeOfRequest = htmlspecialchars($_POST['typeOfRequest']);
+
+                $loginCredentialsFile = fopen("loginCredentials.txt", "a+");
+                $credentialsValidity = "false";
+
+                if($typeOfRequest == 'create'){
+                    fwrite($loginCredentialsFile, $username . ":" . $password. "\n");
+                }else{
+                   // while ($line = fgets($loginCredentialsFile)) {
+                    $line = fgets($loginCredentialsFile);
+                        $lineUserName = substr($line, 0, 5);
+                        $linePassword = substr($line, $line.strrpos(":"), strlen($line));
+                        if($username == $lineUserName && $password == $linePassword){
+                            $credentialsValidity = "true";
+                     //   }
+                    }
+                    echo $lineUserName;
+
+                }
+                ?>",
                 time: '',
                 date: '',
                 disclaimerDialog: false,
@@ -115,7 +140,7 @@ session_start();
             login: function(){
                 document.loginForm.username.value = this.username;
                 document.loginForm.password.value = this.password;
-                document.loginForm.typeOfRequest.value =
+                document.loginForm.typeOfRequest.value = this.typeOfRequest;
                 document.forms["loginForm"].submit();
             }
        },
@@ -125,12 +150,25 @@ session_start();
 </script>
 
 <?php
+    $var = "X";
     $username = htmlspecialchars($_POST['username']);
-    $password = htmlspecialchars($_POST['username']);
-    $typeOfRequest
+    $password = htmlspecialchars($_POST['password']);
+    $typeOfRequest = htmlspecialchars($_POST['typeOfRequest']);
 
-    $loginCredentialsFile = fopen("loginCredentials", "w");
+    $loginCredentialsFile = fopen("loginCredentials", "w+");
+    $credentialsValidity = false;
 
+    if($typeOfRequest == 'create'){
+        fwrite($loginCredentialsFile, $username . ":" . $password. "\n");
+    }else{
+        while ($line = fgets($loginCredentialsFile)) {
+            $lineUserName = substr($line, 0, $line.strrpos(":"));
+            $linePassword = substr($line, $line.strrpos(":"), strlen($line));
+            if($username == $lineUserName && $password == $linePassword){
+                $credentialsValidity = true;
+            }
+        }
+    }
 ?>
 
 </body>
