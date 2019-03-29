@@ -1,3 +1,3 @@
-Note 1 hotel per line. All have the following format in order to be parsed correctly;
-{'hotelName':'value','location':'value','address':'value','nRoomsAvailable':'value','special':'Facilities'"'value','price':'value'}
-
+{"hotelName":"value","location":"value","address":"value","nRoomsAvailable":"value","specialFacilities":"value","price":"value"},
+{"hotelName":"value","location":"value","address":"value","nRoomsAvailable":"value","specialFacilities":"value","price":"value"},
+{"hotelName":"value","location":"value","address":"value","nRoomsAvailable":"value","specialFacilities":"value","price":"value"}

@@ -95,7 +95,7 @@ session_start();
                             <input type="hidden" name="keyword" value="x">
                             <input type="hidden" name="typeOfRequest" value="x">
                             <v-layout justify-center pt-3>
-                                <v-btn type="submit" outline round dark color="grey darken-2" @click="search()">Search </v-btn>
+                                <v-btn outline round dark color="grey darken-2" @click="search()">Search </v-btn>
                             </v-layout>
                         </form>
                     </v-card>
@@ -160,9 +160,10 @@ session_start();
                 }
                 ?>",
 
-                hotelsString: '<?php
+                hotelsString: [<?php
                     $string = file_get_contents("availableHotelRooms.txt");
-                    echo json_encode($string)?>',
+                    echo $string?>],
+                validHotels: [],
                 time: '',
                 date: '',
                 disclaimerDialog: false,
@@ -196,9 +197,15 @@ session_start();
                 document.forms["loginForm"].submit();
             },
            search: function(){
-               document.hotelsForm.keyword.value = this.keyword;
-               document.hotelsForm.category.value = this.category;
-               document.forms["hotelsForm"].submit();
+                var validHotelsTemp = [];
+               for (var i = 0; i<this.hotelsString.length; i++){
+                   if(this.hotelsString[i][this.category] == this.keyword){
+                       alert("x");
+                       validHotelsTemp.push(hotelsString[i]);
+                   }
+               }
+               this.validHotels = validHotelsTemp;
+               console.log(this.validHotels);
            }
        },
         computed:{
