@@ -23,7 +23,10 @@
 <body>
 
 <?php
-session_start();
+if(htmlspecialchars($_POST['logout']) == "true"){
+    session_unset();
+    session_destroy();
+}
 ?>
 
 
@@ -35,7 +38,7 @@ session_start();
             <h1 class="title font-weight-light" style="color: #424242; margin-left: 30%" v-show="credentialsValidity == 'true'"> Welcome {{sessionUsername}} !</h1>
             <h1 class="title font-weight-light" style="color: #424242" id="clock1" v-show="credentialsValidity == 'true'"> {{time}}</h1>
             <h1 class="title font-weight-light" style="color: #424242" id="clock2" v-show="credentialsValidity == 'false'"> {{time}}</h1>
-            <v-btn s style="padding-left: 5px" v-if="credentialsValidity == 'true'" fab flat @click="credentialsValidity ='false'; logout = true"> <v-icon color="#424242"> fas fa-sign-out-alt</v-icon></v-btn>
+            <v-btn s style="padding-left: 5px" v-if="credentialsValidity == 'true'" fab flat @click="credentialsValidity ='false'; logout = true; wantToSearch=true; logoutPHP()"> <v-icon color="#424242"> fas fa-sign-out-alt</v-icon></v-btn>
         </v-toolbar>
         <v-content>
             <v-alert
@@ -81,14 +84,14 @@ session_start();
                 </v-card>
                 </v-layout>
                 <v-layout justify-center align-content-center v-if="credentialsValidity == 'true' && !logout">
-                    <v-card light v-if="credentialsValidity == 'true'" id="hotelsCard">
+                    <v-card light v-if="credentialsValidity == 'true' && wantToSearch" id="hotelsCard">
                         <v-card-title style="justify-content: center" pb-5>
                             <v-icon large left>fas fa-search</v-icon>
                             <span class="title font-weight-light">Search for an hotel</span>
                         </v-card-title>
                         <form method="POST" action="a3q3.php" id="hotelsForm" name="hotelsForm">
 
-                            <v-combobox v-model="category" :items="categories" style="margin-top: 20px" autofocus label="Choose a category"></v-combobox>
+                            <v-autocomplete item-value="text" item-text="text" v-model="category" :items="categories" style="margin-top: 20px" autofocus label="Choose a category" ></v-autocomplete>
                             <v-text-field v-model="keyword" style="margin-top: 20px;" outline label="Keyword..."></v-text-field>
 
                             <input type="hidden" name="category" value="x">
@@ -98,6 +101,18 @@ session_start();
                                 <v-btn outline round dark color="grey darken-2" @click="search()">Search </v-btn>
                             </v-layout>
                         </form>
+                    </v-card>
+                    <v-card light v-if="credentialsValidity == 'true' && !wantToSearch" id="hotelsCard">
+                        <v-card-title style="justify-content: center" pb-5>
+                            <v-icon large left>fas fa-building</v-icon>
+                            <span class="title font-weight-light">Search Results</span>
+                        </v-card-title>
+                        <v-card-text class="title font-weight-light" v-for="hotel in validHotels">
+                           Name: {{hotel['hotelName']}} Location: {{hotel.location}} Address {{hotel.address}}
+                        </v-card-text>
+                        <v-layout justify-center pt-3>
+                            <v-btn outline round dark color="grey darken-2" @click="wantToSearch = true; validHotels= null"> <v-icon>fas fa-angle-left</v-icon></v-btn>
+                        </v-layout>
                     </v-card>
                 </v-layout>
             </v-container>
@@ -116,6 +131,9 @@ session_start();
             <span class=" font-weight-light">&copy; 2019 All images randomly generated from: https://picsum.photos/510/300?random</span>
             <v-btn style="margin-left: 14%" dark round @click="disclaimerDialog=true" light color="grey darken-2">Privacy/Disclaimer</v-btn>
             <v-btn style="margin-left: 42%" fab small @click="showFooter=false"><v-icon color="grey darken-2">fas fa-times</v-icon></v-btn>
+            <form method="post" action="a3q3.php" id="hiddenLogoutForm" name="hiddenLogoutForm">
+                <input type="hidden" name="logout" value="x">
+            </form>
         </v-footer>
     </v-app>
 </div>
@@ -124,6 +142,7 @@ session_start();
         el: "#app",
         data() {
             return {
+                wantToSearch: true,
                 category: '',
                 keyword: '',
                 categories: [ {header: 'Select a search category:'}, {text: 'location'}, {text: 'address'}, {text: 'number of rooms available'}, {text: 'special facilities'}, {text: 'price'}],
@@ -149,13 +168,15 @@ session_start();
                     $credentialsValidity = "true";
                     echo $credentialsValidity;
                 }else{
-                   while ($line = fgets($loginCredentialsFile)) {
-                        $lineUserName = substr($line, 0, strpos($line,":"));
-                        $linePassword = substr($line, strpos($line,":")+1, strpos($line,";")-strpos($line,":")-1);
-                        if($username == $lineUserName && (strpos($password, $linePassword) != false || $password == $linePassword)){
-                            $credentialsValidity = "true";
-                        }
-                    }
+                   if($username != "") {
+                       while ($line = fgets($loginCredentialsFile)) {
+                           $lineUserName = substr($line, 0, strpos($line, ":"));
+                           $linePassword = substr($line, strpos($line, ":") + 1, strpos($line, ";") - strpos($line, ":") - 1);
+                           if ($username == $lineUserName && (strpos($password, $linePassword) != false || $password == $linePassword)) {
+                               $credentialsValidity = "true";
+                           }
+                       }
+                   }
                     echo $credentialsValidity;
                 }
                 ?>",
@@ -197,15 +218,16 @@ session_start();
                 document.forms["loginForm"].submit();
             },
            search: function(){
-                var validHotelsTemp = [];
-               for (var i = 0; i<this.hotelsString.length; i++){
-                   if(this.hotelsString[i][this.category] == this.keyword){
-                       alert("x");
-                       validHotelsTemp.push(hotelsString[i]);
-                   }
-               }
-               this.validHotels = validHotelsTemp;
+               this.validHotels = this.hotelsString.filter(hotel => {
+                   return hotel[this.category] === this.keyword;
+               });
                console.log(this.validHotels);
+               this.wantToSearch = false;
+           },
+           logoutPHP: function () {
+               document.hiddenLogoutForm.logout.value = "true";
+               document.forms["hiddenLogoutForm"].submit();
+               this.credentialsValidity == false;
            }
        },
         computed:{
@@ -217,6 +239,8 @@ session_start();
                     return false
                 }else if (this.request == 'login') {
                     return this.credentialsValidity === 'false' && !this.logout;
+                }else if(this.username === '' || this.password === ''){
+                    return false;
                 }else{
                     return false;
                 }
